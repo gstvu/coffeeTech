@@ -1,0 +1,86 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel Admin - CoffeeTech</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f4f4f9; }
+        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        input { padding: 10px; width: 40%; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        button { padding: 10px 20px; background: #6f4e37; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #5a3e2b; }
+        button.delete { background: #ff4444; padding: 5px 10px; margin-left: 10px; }
+        li { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+    <h1>☕ Painel Administrativo CoffeeTech</h1>
+
+    <!-- ÁREA DE CADASTRO -->
+    <div class="card">
+        <h3>Novo Cliente</h3>
+        <input type="text" id="nome" placeholder="Nome Completo">
+        <input type="email" id="email" placeholder="E-mail">
+        <button onclick="salvarUsuario()">Cadastrar</button>
+    </div>
+
+    <!-- ÁREA DE LISTAGEM -->
+    <div class="card">
+        <h3>Lista de Interessados</h3>
+        <ul id="lista">Carregando...</ul>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/usuarios';
+
+        // 1. Função para carregar a lista (READ)
+        async function carregarLista() {
+            const resposta = await fetch(API_URL);
+            const usuarios = await resposta.json();
+            
+            const lista = document.getElementById('lista');
+            lista.innerHTML = '';
+
+            usuarios.forEach(user => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span><strong>${user.nome}</strong> (${user.email})</span>
+                    <button class="delete" onclick="deletarUsuario(${user.id})">Remover</button>
+                `;
+                lista.appendChild(li);
+            });
+        }
+
+        // 2. Função para salvar (CREATE)
+        async function salvarUsuario() {
+            const nome = document.getElementById('nome').value;
+            const email = document.getElementById('email').value;
+
+            if(!nome || !email) return alert('Preencha tudo!');
+
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nome, email })
+            });
+
+            document.getElementById('nome').value = '';
+            document.getElementById('email').value = '';
+            carregarLista(); // Recarrega a lista para mostrar o novo
+        }
+
+        // 3. Função para deletar (DELETE)
+        async function deletarUsuario(id) {
+            if(confirm('Tem certeza que deseja remover este cliente?')) {
+                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                carregarLista();
+            }
+        }
+
+        // Inicia carregando a lista
+        carregarLista();
+    </script>
+</body>
+</html>
+
